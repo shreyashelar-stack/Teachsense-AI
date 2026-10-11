@@ -703,3 +703,196 @@ button:disabled {
   cursor: wait;
 }
 
+/* TeachSense AI — Premium interaction styles */
+
+.ts-message {
+    padding: 14px 18px;
+    margin: 16px 0;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.6;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #334155;
+}
+
+.ts-message-success {
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+    color: #065f46;
+}
+
+.ts-message-error {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
+}
+
+.ts-message-info {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1e40af;
+}
+
+.ts-result-card,
+.ts-response-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 22px;
+    margin: 16px 0;
+    box-shadow: 0 5px 20px rgba(15, 23, 42, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ts-result-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.09);
+}
+
+.ts-results-title {
+    font-size: 26px;
+    font-weight: 750;
+    letter-spacing: -0.5px;
+    margin-bottom: 20px;
+    color: #0f172a;
+}
+
+.ts-result-heading {
+    font-size: 17px;
+    font-weight: 700;
+    color: #4338ca;
+    margin: 0 0 12px;
+    text-transform: capitalize;
+}
+
+.ts-result-body {
+    color: #475569;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+}
+
+.ts-result-row {
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.ts-result-row:last-child {
+    border-bottom: 0;
+}
+
+.ts-result-row strong {
+    display: block;
+    color: #334155;
+    margin-bottom: 5px;
+    text-transform: capitalize;
+}
+
+.ts-result-row p {
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+.ts-response-card label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 14px;
+    color: #334155;
+}
+
+.ts-response-card input,
+.ts-response-card textarea {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    margin-top: 8px;
+    padding: 12px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    font: inherit;
+    background: #ffffff;
+    color: #0f172a;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.ts-response-card input:focus,
+.ts-response-card textarea:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+}
+
+.remove-response {
+    padding: 9px 14px;
+    border: 1px solid #fecaca;
+    border-radius: 9px;
+    background: #fff1f2;
+    color: #be123c;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.ts-chat-bubble {
+    max-width: 85%;
+    width: fit-content;
+    margin: 12px 0;
+    padding: 13px 17px;
+    border-radius: 16px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.ts-chat-user {
+    margin-left: auto;
+    color: #ffffff;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    border-bottom-right-radius: 5px;
+}
+
+.ts-chat-assistant {
+    margin-right: auto;
+    color: #1e293b;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-bottom-left-radius: 5px;
+}
+
+button:disabled {
+    opacity: 0.65;
+    cursor: wait;
+}
+
+#apiStatus.connected {
+    color: #059669;
+}
+
+#apiStatus.disconnected {
+    color: #dc2626;
+}
+
+@media (max-width: 600px) {
+    .ts-result-card,
+    .ts-response-card {
+        padding: 16px;
+        border-radius: 12px;
+    }
+
+    .ts-results-title {
+        font-size: 22px;
+    }
+
+    .ts-chat-bubble {
+        max-width: 94%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ts-result-card,
+    .ts-response-card,
+    .ts-response-card input,
+    .ts-response-card textarea {
+        transition: none;
+    }
+}
+
