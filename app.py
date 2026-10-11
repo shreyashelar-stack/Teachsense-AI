@@ -338,42 +338,88 @@ def chat():
         })
 
 
+
 # ---------- ANSWER ANALYSIS ----------
 
 @app.route("/analyze", methods=["POST"])
 @login_required
 def analyze():
-    data = request.get_json(silent=True) or {}
+    data = request.get_json(silent=True)
+
+    if not isinstance(data, dict):
+        return jsonify({
+            "success": False,
+            "error": "Invalid request. Please submit assessment data as JSON."
+        }), 400
 
     question = data.get("question", "")
-    student_answer = data.get("student_answer", "")
     correct_answer = data.get("correct_answer", "")
+    student_answer = data.get("student_answer", "")
+
+    # Support the alternative camelCase field names.
+    if not question:
+        question = data.get("questionText", "")
+
+    if not correct_answer:
+        correct_answer = data.get("correctAnswer", "")
+
+    if not student_answer:
+        student_answer = data.get("studentAnswer", "")
 
     if not all(
         isinstance(value, str)
-        for value in (question, student_answer, correct_answer)
+        for value in (question, correct_answer, student_answer)
     ):
         return jsonify({
-            "error": "All fields must contain text."
+            "success": False,
+            "error": "Question and answers must be text."
+        }), 400
+
+    if not question.strip():
+        return jsonify({
+            "success": False,
+            "error": "Please enter the question."
+        }), 400
+
+    if not student_answer.strip():
+        return jsonify({
+            "success": False,
+            "error": "Please enter a student's answer."
+        }), 400
+
+    if not correct_answer.strip():
+        return jsonify({
+            "success": False,
+            "error": "Please enter the correct answer."
         }), 400
 
     try:
         from insights import analyze_answer
 
         result = analyze_answer(
-            question,
-            student_answer,
-            correct_answer
+            question.strip(),
+            student_answer.strip(),
+            correct_answer.strip()
         )
 
+        # Ensure the result can be returned as JSON.
+        if not isinstance(result, dict):
+            result = {"result": str(result)}
+
+        result["success"] = True
         return jsonify(result)
 
     except Exception:
-        app.logger.exception("Answer analysis failed")
+        app.logger.exception("Assessment analysis failed")
 
         return jsonify({
-            "error": "Unable to analyze this answer."
+            "success": False,
+            "error": (
+                "Assessment analysis failed. "
+                "Check insights.py and the server logs."
+            )
         }), 500
+
 
 
 # ---------- RUN SERVER ----------
