@@ -1,0 +1,205 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson Planner | TeachSense AI</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+<div class="app-layout">
+
+    <aside class="sidebar">
+        <a class="brand" href="index.html">
+            <span class="brand-icon">✦</span>
+            <span>TeachSense
+                <small>AI LEARNING PLATFORM</small>
+            </span>
+        </a>
+
+        <div class="nav-label">Workspace</div>
+        <nav>
+            <a class="nav-link" href="index.html">⌂ Dashboard</a>
+            <a class="nav-link" href="assessment.html">▤ Assessment Analysis</a>
+            <a class="nav-link" href="insights.html">◈ Learning Insights</a>
+            <a class="nav-link active" href="lesson-plan.html">✧ Lesson Planner</a>
+            <a class="nav-link" href="chat.html">◉ AI Teaching Assistant</a>
+        </nav>
+
+        <div class="sidebar-note">
+            <div class="eyebrow">SMART TEACHING</div>
+            <strong>Every learner matters.</strong>
+            <p>Use learning evidence to plan your next lesson.</p>
+        </div>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <div>
+                <div class="eyebrow">TEACHING WORKSPACE</div>
+                <h1>Lesson Planner</h1>
+                <p class="subtitle">
+                    Create structured lessons around your students' learning needs.
+                </p>
+            </div>
+            <div class="avatar">T</div>
+        </header>
+
+        <section class="hero">
+            <div>
+                <div class="eyebrow">✦ PERSONALIZED LEARNING</div>
+                <h1>Plan smarter.<br><span>Teach better.</span></h1>
+                <p class="subtitle">
+                    Build lesson plans with learning objectives, classroom
+                    activities, assessment questions, and differentiated support.
+                </p>
+            </div>
+
+            <div class="hero-art" aria-hidden="true">
+                <div class="brain-orbit">
+                    <div class="brain-symbol">✧</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="section-heading">
+                <div>
+                    <div class="eyebrow">LESSON CONFIGURATION</div>
+                    <h2>Design your lesson</h2>
+                    <p class="subtitle">
+                        Enter the details below to prepare a teaching plan.
+                    </p>
+                </div>
+                <span class="brand-icon">✦</span>
+            </div>
+
+            <form id="lessonForm">
+                <div class="form-grid">
+
+                    <div class="form-group">
+                        <label for="lessonTopic">Lesson topic *</label>
+                        <input
+                            type="text"
+                            id="lessonTopic"
+                            name="topic"
+                            placeholder="e.g. Photosynthesis"
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lessonLevel">Class / Grade *</label>
+                        <select id="lessonLevel" name="grade" required>
+                            <option value="">Select class</option>
+                            <option value="Grade 5">Grade 5</option>
+                            <option value="Grade 6">Grade 6</option>
+                            <option value="Grade 7">Grade 7</option>
+                            <option value="Grade 8">Grade 8</option>
+                            <option value="Grade 9">Grade 9</option>
+                            <option value="Grade 10">Grade 10</option>
+                            <option value="Grade 11">Grade 11</option>
+                            <option value="Grade 12">Grade 12</option>
+                            <option value="College">College</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="duration">Lesson duration *</label>
+                        <select id="duration" name="duration" required>
+                            <option value="20 minutes">20 minutes</option>
+                            <option value="30 minutes">30 minutes</option>
+                            <option value="45 minutes" selected>45 minutes</option>
+                            <option value="60 minutes">60 minutes</option>
+                            <option value="90 minutes">90 minutes</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="resources">Available resources</label>
+                        <input
+                            type="text"
+                            id="resources"
+                            name="resources"
+                            placeholder="e.g. Whiteboard, projector, charts">
+                    </div>
+
+                    <div class="form-group full">
+                        <label for="learningGoal">Learning objectives *</label>
+                        <textarea
+                            id="learningGoal"
+                            name="learningGoal"
+                            rows="3"
+                            placeholder="What should students understand or be able to do by the end?"
+                            required></textarea>
+                    </div>
+
+                    <div class="form-group full">
+                        <label for="learningNeeds">Student learning needs</label>
+                        <textarea
+                            id="learningNeeds"
+                            name="learningNeeds"
+                            rows="3"
+                            placeholder="e.g. Students need visual examples or extra practice with key concepts."></textarea>
+                    </div>
+
+                </div>
+
+                <div class="notice">
+                    <strong>Teacher in control:</strong>
+                    The generated plan is a draft. Review and adapt it before
+                    using it in your classroom.
+                </div>
+
+                <div id="lessonMessage" class="notice" role="status" aria-live="polite" hidden></div>
+
+                <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:20px;">
+                    <button type="submit" class="btn" id="lessonSubmit">
+                        ✦ Generate Lesson Plan
+                    </button>
+                    <button type="reset" class="btn btn-secondary">
+                        Clear Form
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <section class="panel" id="lessonResult" aria-live="polite">
+            <div class="section-heading">
+                <div>
+                    <div class="eyebrow">YOUR TEACHING BLUEPRINT</div>
+                    <h2>Lesson plan output</h2>
+                    <p class="subtitle">
+                        Your generated lesson plan will appear here.
+                    </p>
+                </div>
+            </div>
+
+            <div class="result-block">
+                <h3>Ready to plan?</h3>
+                <p>
+                    Complete the form above. TeachSense AI will prepare
+                    a draft using the lesson details you provide.
+                </p>
+            </div>
+
+            <button
+                type="button"
+                class="btn btn-secondary"
+                id="copyLesson"
+                style="margin-top:16px;"
+                disabled>
+                Copy Lesson Plan
+            </button>
+        </section>
+
+        <footer class="footer">
+            TeachSense AI · Supporting teachers through learning insights.
+        </footer>
+
+    </main>
+</div>
+</body>
+</html>
