@@ -1,0 +1,134 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learning Insights | TeachSense AI</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+<div class="app-layout">
+
+  <aside class="sidebar">
+    <a class="brand" href="index.html">
+      <span class="brand-icon">✦</span>
+      <span>TeachSense <small>AI LEARNING PLATFORM</small></span>
+    </a>
+
+    <div class="nav-label">Workspace</div>
+    <nav>
+      <a class="nav-link" href="index.html">⌂ Dashboard</a>
+      <a class="nav-link" href="assessment.html">▤ Assessment Analysis</a>
+      <a class="nav-link active" href="insights.html">◈ Learning Insights</a>
+      <a class="nav-link" href="lesson-plan.html">✧ Lesson Planner</a>
+      <a class="nav-link" href="chat.html">◉ AI Teaching Assistant</a>
+    </nav>
+
+    <div class="sidebar-note">
+      <div class="eyebrow">LEARNING INSIGHTS</div>
+      <strong>Every mistake can teach us.</strong>
+      <p>Use response patterns to decide what to explain next.</p>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">DATA-INSPIRED TEACHING</div>
+        <h1>Learning Insights</h1>
+        <p class="subtitle">
+          Explore assessment results and identify areas that may need more teaching.
+        </p>
+      </div>
+      <div class="avatar">T</div>
+    </header>
+
+    <section class="hero">
+      <div>
+        <div class="eyebrow">✦ LEARN FROM EVERY RESPONSE</div>
+        <h1>Turn patterns into <span>progress.</span></h1>
+        <p class="subtitle">
+          Review student response patterns, possible misconceptions,
+          and suggested teaching activities.
+        </p>
+        <a class="btn" href="assessment.html">＋ Create assessment</a>
+      </div>
+
+      <div class="hero-art" aria-hidden="true">
+        <div class="brain-orbit">
+          <div class="brain-symbol">◈</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading" style="margin-top:0">
+        <h2>Select an assessment</h2>
+        <span class="badge">Report explorer</span>
+      </div>
+
+      <div class="form-group">
+        <label for="reportSelect">Saved assessment report</label>
+        <select id="reportSelect">
+          <option value="">Loading saved reports...</option>
+        </select>
+      </div>
+
+      <p class="muted">
+        Reports appear here after an assessment has been analyzed successfully.
+      </p>
+
+      <div id="insightReport" aria-live="polite">
+        <div class="empty-state">
+          <div class="empty-icon">📊</div>
+          <strong>No report selected</strong>
+          <p>
+            Analyze an assessment first, then select its report here.
+          </p>
+          <a href="assessment.html" class="btn btn-secondary">
+            Go to assessment analysis →
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid-2" style="margin-top:24px">
+
+      <article class="panel">
+        <div class="stat-icon">◎</div>
+        <h3>Possible misconceptions</h3>
+        <p class="muted">
+          Similar incorrect answers may reveal a concept that students
+          need to practise or understand more clearly.
+        </p>
+        <div class="notice">
+          Treat each result as a suggestion, not a definitive judgment.
+          Confirm it with discussion or a follow-up question.
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="stat-icon">✧</div>
+        <h3>Recommended next steps</h3>
+        <p class="muted">
+          Use the assessment evidence to plan an explanation,
+          worked example, classroom activity, or follow-up exercise.
+        </p>
+        <a class="btn btn-secondary" href="lesson-plan.html">
+          Create a lesson plan →
+        </a>
+      </article>
+
+    </section>
+
+    <footer class="footer">
+      TeachSense AI · Insights support professional teacher judgment.
+    </footer>
+
+  </main>
+</div>
+</body>
+</html>
