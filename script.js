@@ -1,10 +1,10 @@
 
 "use strict";
 
-/* =========================================================
-   TEACHSENSE AI — PREMIUM JAVASCRIPT
-   Assessment | Insights | Lesson Plans | AI Chat | Dashboard
-   ========================================================= */
+/* ==========================================================
+   TEACHSENSE AI — PREMIUM COMPLETE SCRIPT
+   Assessment | Dashboard | Insights | Lesson Plans | AI Chat
+   ========================================================== */
 
 const API = {
     analyze: "/api/analyze",
@@ -14,39 +14,31 @@ const API = {
     health: "/api/health"
 };
 
-/* -------------------- DOM HELPERS -------------------- */
-
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) =>
     Array.from(root.querySelectorAll(selector));
 
-function escapeHTML(value) {
-    return String(value ?? "").replace(/[&<>"']/g, char => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-    })[char]);
-}
+/* ==================== UTILITIES ==================== */
 
 function getValue(object, keys, fallback = "") {
     for (const key of keys) {
-        if (object && object[key] != null) return object[key];
+        if (object && object[key] !== undefined && object[key] !== null) {
+            return object[key];
+        }
     }
     return fallback;
 }
 
-function setMessage(element, text, type = "info") {
+function showMessage(element, message, type = "info") {
     if (!element) return;
 
-    element.textContent = text;
+    element.textContent = message;
     element.className = `ts-message ts-message-${type}`;
     element.setAttribute("role", type === "error" ? "alert" : "status");
     element.hidden = false;
 }
 
-function setLoading(button, loading, text = "Processing...") {
+function setLoading(button, loading, loadingText = "Please wait...") {
     if (!button) return;
 
     if (loading) {
@@ -56,7 +48,7 @@ function setLoading(button, loading, text = "Processing...") {
 
         button.disabled = true;
         button.setAttribute("aria-busy", "true");
-        button.textContent = text;
+        button.textContent = loadingText;
     } else {
         button.disabled = false;
         button.removeAttribute("aria-busy");
@@ -67,8 +59,6 @@ function setLoading(button, loading, text = "Processing...") {
         }
     }
 }
-
-/* -------------------- API REQUESTS -------------------- */
 
 async function apiRequest(url, options = {}) {
     const headers = new Headers(options.headers || {});
@@ -83,14 +73,16 @@ async function apiRequest(url, options = {}) {
         credentials: "same-origin"
     });
 
-    const contentType = response.headers.get("content-type") || "";
+    const type = response.headers.get("content-type") || "";
     let data;
 
-    if (contentType.includes("application/json")) {
+    if (type.includes("application/json")) {
         data = await response.json();
     } else {
         const body = await response.text();
-        data = { error: body || `Server error (${response.status})` };
+        data = {
+            error: body || `Server returned status ${response.status}`
+        };
     }
 
     if (!response.ok || data.success === false) {
@@ -102,10 +94,10 @@ async function apiRequest(url, options = {}) {
     return data;
 }
 
-/* -------------------- PREMIUM RESULT DISPLAY -------------------- */
+/* ==================== PREMIUM RESULT CARDS ==================== */
 
 function createResultCard(title, content) {
-    const card = document.createElement("section");
+    const card = document.createElement("article");
     card.className = "ts-result-card";
 
     const heading = document.createElement("h3");
@@ -120,9 +112,11 @@ function createResultCard(title, content) {
 
         content.forEach(item => {
             const li = document.createElement("li");
-            li.textContent = typeof item === "object"
-                ? JSON.stringify(item)
-                : String(item);
+            li.textContent =
+                typeof item === "object" && item !== null
+                    ? JSON.stringify(item, null, 2)
+                    : String(item ?? "");
+
             list.appendChild(li);
         });
 
@@ -138,9 +132,10 @@ function createResultCard(title, content) {
                 .replace(/[_-]/g, " ");
 
             const detail = document.createElement("p");
-            detail.textContent = typeof value === "object" && value !== null
-                ? JSON.stringify(value, null, 2)
-                : String(value ?? "");
+            detail.textContent =
+                typeof value === "object" && value !== null
+                    ? JSON.stringify(value, null, 2)
+                    : String(value ?? "");
 
             row.append(label, detail);
             body.appendChild(row);
@@ -155,34 +150,29 @@ function createResultCard(title, content) {
     return card;
 }
 
-function renderResult(container, result) {
+function renderResult(container, data, headingText = "Results") {
     if (!container) return;
 
     container.replaceChildren();
 
     const heading = document.createElement("h2");
     heading.className = "ts-results-title";
-    heading.textContent = "Your Results";
+    heading.textContent = headingText;
     container.appendChild(heading);
 
-    if (typeof result === "string") {
-        container.appendChild(createResultCard("Analysis", result));
+    if (typeof data === "string" || typeof data !== "object" || data === null) {
+        container.appendChild(createResultCard("Analysis", data));
         return;
     }
 
-    if (!result || typeof result !== "object") {
-        container.appendChild(createResultCard("Analysis", result));
-        return;
-    }
+    const entries = Object.entries(data);
 
-    const sections = Object.entries(result);
-
-    if (sections.length === 0) {
+    if (!entries.length) {
         container.appendChild(createResultCard("Analysis", "No results available."));
         return;
     }
 
-    sections.forEach(([key, value]) => {
+    entries.forEach(([key, value]) => {
         const title = key
             .replace(/([A-Z])/g, " $1")
             .replace(/[_-]/g, " ")
@@ -192,15 +182,104 @@ function renderResult(container, result) {
     });
 }
 
-/* =========================================================
+/* ==========================================================
+   PREMIUM ASSESSMENT HISTORY CARD
+   ========================================================== */
+
+function renderAssessmentCard(item) {
+    const card = document.createElement("article");
+    card.className = "assessment-premium-card";
+
+    const header = document.createElement("div");
+    header.className = "assessment-card-header";
+
+    const icon = document.createElement("div");
+    icon.className = "assessment-card-icon";
+    icon.textContent = "✦";
+    icon.setAttribute("aria-hidden", "true");
+
+    const titleArea = document.createElement("div");
+    titleArea.className = "assessment-title-area";
+
+    const title = document.createElement("h3");
+    title.textContent = item.topic || item.title || "Untitled Assessment";
+
+    const grade = document.createElement("span");
+    grade.className = "assessment-grade-badge";
+    grade.textContent = item.grade || "Grade not specified";
+
+    titleArea.append(title, grade);
+    header.append(icon, titleArea);
+
+    const divider = document.createElement("div");
+    divider.className = "assessment-card-divider";
+
+    const dateRow = document.createElement("div");
+    dateRow.className = "assessment-date-row";
+
+    const dateLabel = document.createElement("span");
+    dateLabel.textContent = "CREATED ON";
+
+    const dateValue = document.createElement("time");
+    const rawDate = item.created_at || item.createdAt;
+
+    if (rawDate) {
+        const parsedDate = new Date(rawDate);
+
+        if (!Number.isNaN(parsedDate.getTime())) {
+            dateValue.dateTime = parsedDate.toISOString();
+            dateValue.textContent = parsedDate.toLocaleDateString("en-IN", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+            });
+        } else {
+            dateValue.textContent = String(rawDate);
+        }
+    } else {
+        dateValue.textContent = "Date unavailable";
+    }
+
+    dateRow.append(dateLabel, dateValue);
+
+    const footer = document.createElement("div");
+    footer.className = "assessment-card-footer";
+
+    const status = document.createElement("span");
+    status.className = "assessment-status";
+
+    const dot = document.createElement("span");
+    dot.className = "assessment-status-dot";
+
+    status.append(dot, document.createTextNode("Assessment saved"));
+    footer.appendChild(status);
+
+    const id = item.id ?? item.assessment_id;
+
+    if (id !== undefined && id !== null) {
+        const link = document.createElement("a");
+        link.className = "assessment-view-button";
+        link.href = `insights.html?id=${encodeURIComponent(id)}`;
+        link.append(
+            document.createTextNode("View Insights "),
+            document.createTextNode("↗")
+        );
+        footer.appendChild(link);
+    }
+
+    card.append(header, divider, dateRow, footer);
+    return card;
+}
+
+/* ==========================================================
    1. ASSESSMENT PAGE
-   ========================================================= */
+   ========================================================== */
 
 function initializeAssessment() {
     const form = $("#assessmentForm");
-    if (!form || form.dataset.premiumReady) return;
 
-    form.dataset.premiumReady = "true";
+    if (!form || form.dataset.initialized) return;
+    form.dataset.initialized = "true";
 
     const rowsContainer = $("#responseRows");
     const addButton = $("#addResponse");
@@ -212,8 +291,8 @@ function initializeAssessment() {
     function addStudentRow(studentId = "", answer = "") {
         if (!rowsContainer) return;
 
-        if ($$(".response-row", rowsContainer).length >= 100) {
-            setMessage(message, "Maximum 100 student responses allowed.", "error");
+        if ($$('[name="studentAnswer[]"]', rowsContainer).length >= 100) {
+            showMessage(message, "Maximum 100 responses allowed.", "error");
             return;
         }
 
@@ -224,7 +303,6 @@ function initializeAssessment() {
         idLabel.textContent = "Student ID or Name";
 
         const idInput = document.createElement("input");
-        idInput.type = "text";
         idInput.name = "studentId[]";
         idInput.placeholder = "e.g. Student 1";
         idInput.value = studentId;
@@ -244,12 +322,12 @@ function initializeAssessment() {
         removeButton.textContent = "Remove";
 
         removeButton.addEventListener("click", () => {
-            const allRows = $$(".response-row", rowsContainer);
+            const rows = $$(".response-row", rowsContainer);
 
-            if (allRows.length <= 1) {
+            if (rows.length <= 1) {
                 idInput.value = "";
                 answerInput.value = "";
-                setMessage(message, "The last response row has been cleared.", "info");
+                showMessage(message, "Response row cleared.", "info");
                 return;
             }
 
@@ -262,10 +340,7 @@ function initializeAssessment() {
         rowsContainer.appendChild(row);
     }
 
-    /*
-     * If the HTML already contains a response row, leave it intact.
-     * Otherwise, create the first row.
-     */
+    // Keep the first row already present in assessment.html.
     if (
         rowsContainer &&
         !$$('[name="studentAnswer[]"]', rowsContainer).length
@@ -290,16 +365,16 @@ function initializeAssessment() {
             const topic = $('[name="topic"]', form);
             const grade = $('[name="grade"]', form);
             const question = $('[name="question"]', form);
-            const correctAnswer = $('[name="correctAnswer"]', form);
+            const correct = $('[name="correctAnswer"]', form);
 
             if (topic) topic.value = "Order of Operations";
             if (grade) grade.value = "Grade 7";
             if (question) question.value = "Calculate 2 + 3 × 4";
-            if (correctAnswer) correctAnswer.value = "14";
+            if (correct) correct.value = "14";
 
-            setMessage(
+            showMessage(
                 message,
-                "Sample responses are ready. Click Analyze Responses.",
+                "Sample responses loaded. Ready to analyze!",
                 "success"
             );
         });
@@ -318,34 +393,34 @@ function initializeAssessment() {
         const teacherContext =
             $('[name="teacherContext"]', form)?.value.trim() || "";
 
-        const ids = $$('[name="studentId[]"]', form);
-        const answers = $$('[name="studentAnswer[]"]', form);
+        const idFields = $$('[name="studentId[]"]', form);
+        const answerFields = $$('[name="studentAnswer[]"]', form);
 
-        const responses = answers.map((field, index) => ({
-            studentId: ids[index]?.value.trim() || `Student ${index + 1}`,
+        const responses = answerFields.map((field, index) => ({
+            studentId: idFields[index]?.value.trim() || `Student ${index + 1}`,
             answer: field.value.trim()
-        })).filter(item => item.answer.length > 0);
+        })).filter(student => student.answer !== "");
 
         if (!topic || !question || !correctAnswer) {
-            setMessage(
+            showMessage(
                 message,
-                "Please complete the topic, question, and correct answer.",
+                "Please enter the topic, question, and correct answer.",
                 "error"
             );
             return;
         }
 
         if (responses.length < 1 || responses.length > 100) {
-            setMessage(
+            showMessage(
                 message,
-                "Enter between 1 and 100 non-empty student responses.",
+                "Enter between 1 and 100 student responses.",
                 "error"
             );
             return;
         }
 
-        const studentIds = responses.map(item => item.studentId);
-        const studentAnswers = responses.map(item => item.answer);
+        const studentIds = responses.map(student => student.studentId);
+        const studentAnswers = responses.map(student => student.answer);
 
         const payload = {
             topic,
@@ -355,12 +430,7 @@ function initializeAssessment() {
             correct_answer: correctAnswer,
             teacherContext,
             teacher_context: teacherContext,
-
-            responses: responses.map(item => ({
-                studentId: item.studentId,
-                answer: item.answer
-            })),
-
+            responses,
             studentIds,
             studentAnswers,
             student_ids: studentIds,
@@ -368,7 +438,7 @@ function initializeAssessment() {
         };
 
         setLoading(submitButton, true, "Analyzing Responses...");
-        setMessage(message, "TeachSense AI is analyzing the responses...", "info");
+        showMessage(message, "TeachSense AI is analyzing the answers...", "info");
 
         try {
             const data = await apiRequest(API.analyze, {
@@ -382,17 +452,17 @@ function initializeAssessment() {
                 data
             );
 
-            renderResult(output, report);
+            renderResult(output, report, "Assessment Analysis");
 
-            setMessage(
+            showMessage(
                 message,
-                data.message || "Assessment analysis completed successfully.",
+                data.message || "Analysis completed successfully.",
                 "success"
             );
         } catch (error) {
-            setMessage(
+            showMessage(
                 message,
-                `Analysis failed: ${error.message}. If the error mentions student responses, app.py must accept the response format sent by this page.`,
+                `Analysis failed: ${error.message}. Verify the response format in app.py.`,
                 "error"
             );
         } finally {
@@ -401,9 +471,9 @@ function initializeAssessment() {
     });
 }
 
-/* =========================================================
-   2. DASHBOARD / ASSESSMENT HISTORY
-   ========================================================= */
+/* ==========================================================
+   2. DASHBOARD
+   ========================================================== */
 
 async function initializeDashboard() {
     const container =
@@ -415,6 +485,7 @@ async function initializeDashboard() {
 
     try {
         const data = await apiRequest(API.assessments);
+
         const assessments = getValue(
             data,
             ["assessments", "results", "data"],
@@ -424,43 +495,32 @@ async function initializeDashboard() {
         container.replaceChildren();
 
         if (!Array.isArray(assessments) || assessments.length === 0) {
-            container.textContent = "No assessments yet. Create your first one!";
+            const empty = document.createElement("div");
+            empty.className = "assessment-empty-state";
+
+            const title = document.createElement("h3");
+            title.textContent = "No assessments yet";
+
+            const description = document.createElement("p");
+            description.textContent =
+                "Your student analysis reports will appear here.";
+
+            empty.append(title, description);
+            container.appendChild(empty);
             return;
         }
 
         assessments.forEach(item => {
-            const card = document.createElement("article");
-            card.className = "ts-result-card";
-
-            const title = document.createElement("h3");
-            title.textContent = item.topic || item.title || "Assessment";
-
-            const details = document.createElement("p");
-            details.textContent =
-                `Grade: ${item.grade || "Not specified"} | ` +
-                `Date: ${item.created_at || item.createdAt || "Not available"}`;
-
-            card.append(title, details);
-
-            const id = item.id ?? item.assessment_id;
-
-            if (id !== undefined && id !== null) {
-                const link = document.createElement("a");
-                link.href = `insights.html?id=${encodeURIComponent(id)}`;
-                link.textContent = "View Insights →";
-                card.appendChild(link);
-            }
-
-            container.appendChild(card);
+            container.appendChild(renderAssessmentCard(item));
         });
     } catch (error) {
         container.textContent = `Unable to load assessments: ${error.message}`;
     }
 }
 
-/* =========================================================
+/* ==========================================================
    3. INSIGHTS PAGE
-   ========================================================= */
+   ========================================================== */
 
 async function initializeInsights() {
     const container =
@@ -470,11 +530,11 @@ async function initializeInsights() {
 
     if (!container) return;
 
-    const id = new URLSearchParams(location.search).get("id");
+    const id = new URLSearchParams(window.location.search).get("id");
 
     if (!id) {
         container.textContent =
-            "Select an assessment from the dashboard to view insights.";
+            "Choose an assessment from the dashboard to view its insights.";
         return;
     }
 
@@ -483,26 +543,29 @@ async function initializeInsights() {
             `${API.assessments}/${encodeURIComponent(id)}`
         );
 
-        renderResult(
-            container,
-            getValue(data, ["assessment", "insights", "result", "data"], data)
+        const result = getValue(
+            data,
+            ["assessment", "insights", "result", "data"],
+            data
         );
+
+        renderResult(container, result, "Assessment Insights");
     } catch (error) {
         container.textContent = `Unable to load insights: ${error.message}`;
     }
 }
 
-/* =========================================================
-   4. LESSON PLAN PAGE
-   ========================================================= */
+/* ==========================================================
+   4. LESSON PLAN GENERATOR
+   ========================================================== */
 
 function initializeLessonPlan() {
     const form =
         $("#lessonPlanForm") ||
         $("#generateLessonPlanForm");
 
-    if (!form || form.dataset.premiumReady) return;
-    form.dataset.premiumReady = "true";
+    if (!form || form.dataset.initialized) return;
+    form.dataset.initialized = "true";
 
     const output =
         $("#lessonPlanOutput") ||
@@ -513,7 +576,7 @@ function initializeLessonPlan() {
         $("#lessonPlanMessage") ||
         $("#lessonPlanStatus");
 
-    const submitButton = $('button[type="submit"]', form);
+    const button = $('button[type="submit"]', form);
 
     form.addEventListener("submit", async event => {
         event.preventDefault();
@@ -532,8 +595,8 @@ function initializeLessonPlan() {
             teacherContext: fields.teacherContext || fields.context || ""
         };
 
-        setLoading(submitButton, true, "Creating Lesson Plan...");
-        setMessage(message, "Generating your lesson plan...", "info");
+        setLoading(button, true, "Generating Lesson Plan...");
+        showMessage(message, "Creating your lesson plan...", "info");
 
         try {
             const data = await apiRequest(API.lessonPlan, {
@@ -543,29 +606,27 @@ function initializeLessonPlan() {
 
             renderResult(
                 output,
-                getValue(data, ["lessonPlan", "lesson_plan", "plan", "result"], data)
+                getValue(data, ["lessonPlan", "lesson_plan", "plan", "result"], data),
+                "Generated Lesson Plan"
             );
 
-            setMessage(
-                message,
-                data.message || "Lesson plan generated successfully.",
-                "success"
-            );
+            showMessage(message, "Lesson plan generated successfully.", "success");
         } catch (error) {
-            setMessage(message, `Lesson plan failed: ${error.message}`, "error");
+            showMessage(message, `Lesson plan failed: ${error.message}`, "error");
         } finally {
-            setLoading(submitButton, false);
+            setLoading(button, false);
         }
     });
 }
 
-/* =========================================================
-   5. AI CHAT PAGE
-   ========================================================= */
+/* ==========================================================
+   5. AI CHAT
+   ========================================================== */
 
 function initializeChat() {
     const form = $("#chatForm") || $("#chatbotForm");
-    if (!form || form.dataset.premiumReady) return;
+
+    if (!form || form.dataset.initialized) return;
 
     const input =
         $("#chatInput") ||
@@ -579,16 +640,18 @@ function initializeChat() {
 
     if (!input || !messages) return;
 
-    form.dataset.premiumReady = "true";
+    form.dataset.initialized = "true";
 
-    const submitButton = $('button[type="submit"]', form);
+    const button = $('button[type="submit"]', form);
 
     function addMessage(role, text) {
         const bubble = document.createElement("div");
         bubble.className = `ts-chat-bubble ts-chat-${role}`;
         bubble.textContent = text;
+
         messages.appendChild(bubble);
         messages.scrollTop = messages.scrollHeight;
+
         return bubble;
     }
 
@@ -601,7 +664,8 @@ function initializeChat() {
         addMessage("user", text);
         input.value = "";
 
-        setLoading(submitButton, true, "Thinking...");
+        setLoading(button, true, "Thinking...");
+
         const waiting = addMessage("assistant", "TeachSense AI is thinking...");
 
         try {
@@ -619,17 +683,16 @@ function initializeChat() {
                 "No response received."
             ));
         } catch (error) {
-            waiting.textContent = `Sorry, something went wrong: ${error.message}`;
+            waiting.textContent = `Sorry, an error occurred: ${error.message}`;
         } finally {
-            setLoading(submitButton, false);
+            setLoading(button, false);
         }
     });
 }
 
-/* =========================================================
+/* ==========================================================
    6. OPTIONAL BACKEND STATUS
-   Add an element with id="apiStatus" to display this.
-   ========================================================= */
+   ========================================================== */
 
 async function checkBackendStatus() {
     const status = $("#apiStatus");
@@ -648,9 +711,9 @@ async function checkBackendStatus() {
     }
 }
 
-/* =========================================================
-   START APPLICATION
-   ========================================================= */
+/* ==========================================================
+   INITIALIZE
+   ========================================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
     initializeAssessment();
