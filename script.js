@@ -2,9 +2,8 @@
 "use strict";
 
 /* =========================================================
-   TEACHSENSE AI — COMPLETE script.js
-   Dashboard, Assessment, Insights, Lesson Plan, Chat,
-   Login, Signup, and API helpers
+   TEACHSENSE AI — PREMIUM JAVASCRIPT
+   Assessment | Insights | Lesson Plans | AI Chat | Dashboard
    ========================================================= */
 
 const API = {
@@ -15,38 +14,73 @@ const API = {
     health: "/api/health"
 };
 
-const $ = (selector, root = document) =>
-    root.querySelector(selector);
+/* -------------------- DOM HELPERS -------------------- */
 
+const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) =>
     Array.from(root.querySelectorAll(selector));
 
 function escapeHTML(value) {
-    return String(value ?? "").replace(/[&<>"']/g, character => ({
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
         "&": "&amp;",
         "<": "&lt;",
         ">": "&gt;",
         '"': "&quot;",
         "'": "&#39;"
-    })[character]);
+    })[char]);
 }
 
-function showMessage(element, message, type = "info") {
+function getValue(object, keys, fallback = "") {
+    for (const key of keys) {
+        if (object && object[key] != null) return object[key];
+    }
+    return fallback;
+}
+
+function setMessage(element, text, type = "info") {
     if (!element) return;
 
-    element.textContent = message;
-    element.className = `message ${type}`;
+    element.textContent = text;
+    element.className = `ts-message ts-message-${type}`;
+    element.setAttribute("role", type === "error" ? "alert" : "status");
     element.hidden = false;
 }
 
-async function apiRequest(url, options = {}) {
-    const response = await fetch(url, {
-        credentials: "same-origin",
-        ...options,
-        headers: {
-            ...(options.body ? { "Content-Type": "application/json" } : {}),
-            ...(options.headers || {})
+function setLoading(button, loading, text = "Processing...") {
+    if (!button) return;
+
+    if (loading) {
+        if (!button.dataset.originalText) {
+            button.dataset.originalText = button.textContent;
         }
+
+        button.disabled = true;
+        button.setAttribute("aria-busy", "true");
+        button.textContent = text;
+    } else {
+        button.disabled = false;
+        button.removeAttribute("aria-busy");
+
+        if (button.dataset.originalText) {
+            button.textContent = button.dataset.originalText;
+            delete button.dataset.originalText;
+        }
+    }
+}
+
+/* -------------------- API REQUESTS -------------------- */
+
+async function apiRequest(url, options = {}) {
+    const headers = new Headers(options.headers || {});
+
+    if (options.body && !headers.has("Content-Type")) {
+        headers.set("Content-Type", "application/json");
+    }
+
+    const response = await fetch(url, {
+        ...options,
+        headers,
+        credentials: "same-origin"
     });
 
     const contentType = response.headers.get("content-type") || "";
@@ -55,8 +89,8 @@ async function apiRequest(url, options = {}) {
     if (contentType.includes("application/json")) {
         data = await response.json();
     } else {
-        const text = await response.text();
-        data = { error: text || `Server returned HTTP ${response.status}` };
+        const body = await response.text();
+        data = { error: body || `Server error (${response.status})` };
     }
 
     if (!response.ok || data.success === false) {
@@ -68,209 +102,213 @@ async function apiRequest(url, options = {}) {
     return data;
 }
 
-function setButtonLoading(button, loading, loadingText = "Please wait...") {
-    if (!button) return;
+/* -------------------- PREMIUM RESULT DISPLAY -------------------- */
 
-    if (loading) {
-        button.dataset.originalText = button.textContent;
-        button.disabled = true;
-        button.textContent = loadingText;
+function createResultCard(title, content) {
+    const card = document.createElement("section");
+    card.className = "ts-result-card";
+
+    const heading = document.createElement("h3");
+    heading.className = "ts-result-heading";
+    heading.textContent = title;
+
+    const body = document.createElement("div");
+    body.className = "ts-result-body";
+
+    if (Array.isArray(content)) {
+        const list = document.createElement("ul");
+
+        content.forEach(item => {
+            const li = document.createElement("li");
+            li.textContent = typeof item === "object"
+                ? JSON.stringify(item)
+                : String(item);
+            list.appendChild(li);
+        });
+
+        body.appendChild(list);
+    } else if (content && typeof content === "object") {
+        Object.entries(content).forEach(([key, value]) => {
+            const row = document.createElement("div");
+            row.className = "ts-result-row";
+
+            const label = document.createElement("strong");
+            label.textContent = key
+                .replace(/([A-Z])/g, " $1")
+                .replace(/[_-]/g, " ");
+
+            const detail = document.createElement("p");
+            detail.textContent = typeof value === "object" && value !== null
+                ? JSON.stringify(value, null, 2)
+                : String(value ?? "");
+
+            row.append(label, detail);
+            body.appendChild(row);
+        });
     } else {
-        button.disabled = false;
-        if (button.dataset.originalText) {
-            button.textContent = button.dataset.originalText;
-            delete button.dataset.originalText;
-        }
+        const paragraph = document.createElement("p");
+        paragraph.textContent = String(content ?? "");
+        body.appendChild(paragraph);
     }
+
+    card.append(heading, body);
+    return card;
 }
 
-function getFirstValue(object, keys, fallback = "") {
-    for (const key of keys) {
-        if (object && object[key] !== undefined && object[key] !== null) {
-            return object[key];
-        }
-    }
-    return fallback;
-}
-
-function formatValue(value) {
-    if (value === null || value === undefined) return "";
-    if (typeof value === "string") return value;
-    if (typeof value === "number" || typeof value === "boolean") {
-        return String(value);
-    }
-    return JSON.stringify(value, null, 2);
-}
-
-function renderObject(container, data) {
+function renderResult(container, result) {
     if (!container) return;
 
-    if (typeof data === "string") {
-        container.innerHTML = `<p>${escapeHTML(data)}</p>`;
+    container.replaceChildren();
+
+    const heading = document.createElement("h2");
+    heading.className = "ts-results-title";
+    heading.textContent = "Your Results";
+    container.appendChild(heading);
+
+    if (typeof result === "string") {
+        container.appendChild(createResultCard("Analysis", result));
         return;
     }
 
-    if (Array.isArray(data)) {
-        container.innerHTML = data.map(item =>
-            `<div class="result-item">${escapeHTML(formatValue(item))}</div>`
-        ).join("");
+    if (!result || typeof result !== "object") {
+        container.appendChild(createResultCard("Analysis", result));
         return;
     }
 
-    if (data && typeof data === "object") {
-        container.innerHTML = Object.entries(data).map(([key, value]) => `
-            <section class="result-item">
-                <h3>${escapeHTML(
-                    key.replace(/([A-Z])/g, " $1")
-                       .replace(/[_-]/g, " ")
-                )}</h3>
-                <p>${escapeHTML(formatValue(value))}</p>
-            </section>
-        `).join("");
+    const sections = Object.entries(result);
+
+    if (sections.length === 0) {
+        container.appendChild(createResultCard("Analysis", "No results available."));
         return;
     }
 
-    container.innerHTML = `<p>${escapeHTML(formatValue(data))}</p>`;
+    sections.forEach(([key, value]) => {
+        const title = key
+            .replace(/([A-Z])/g, " $1")
+            .replace(/[_-]/g, " ")
+            .replace(/^./, char => char.toUpperCase());
+
+        container.appendChild(createResultCard(title, value));
+    });
 }
 
 /* =========================================================
-   ASSESSMENT PAGE
+   1. ASSESSMENT PAGE
    ========================================================= */
 
 function initializeAssessment() {
     const form = $("#assessmentForm");
-    if (!form) return;
+    if (!form || form.dataset.premiumReady) return;
 
-    const responseRows = $("#responseRows");
+    form.dataset.premiumReady = "true";
+
+    const rowsContainer = $("#responseRows");
     const addButton = $("#addResponse");
     const sampleButton = $("#loadSamples");
     const submitButton = $("#analyzeSubmit");
     const message = $("#assessmentMessage");
-    const preview = $("#analysisPreview");
+    const output = $("#analysisPreview");
 
     function addStudentRow(studentId = "", answer = "") {
-        if (!responseRows) return;
+        if (!rowsContainer) return;
+
+        if ($$(".response-row", rowsContainer).length >= 100) {
+            setMessage(message, "Maximum 100 student responses allowed.", "error");
+            return;
+        }
 
         const row = document.createElement("div");
-        row.className = "response-row";
+        row.className = "response-row ts-response-card";
 
-        row.innerHTML = `
-            <div class="student-response-fields">
-                <label>
-                    Student ID or Name
-                    <input
-                        type="text"
-                        name="studentId[]"
-                        placeholder="e.g. Student 1"
-                    >
-                </label>
+        const idLabel = document.createElement("label");
+        idLabel.textContent = "Student ID or Name";
 
-                <label>
-                    Student Answer
-                    <textarea
-                        name="studentAnswer[]"
-                        rows="2"
-                        placeholder="Enter the student's answer"
-                    ></textarea>
-                </label>
-
-                <button type="button" class="remove-response">
-                    Remove
-                </button>
-            </div>
-        `;
-
-        const idInput = $('[name="studentId[]"]', row);
-        const answerInput = $('[name="studentAnswer[]"]', row);
-
+        const idInput = document.createElement("input");
+        idInput.type = "text";
+        idInput.name = "studentId[]";
+        idInput.placeholder = "e.g. Student 1";
         idInput.value = studentId;
+
+        const answerLabel = document.createElement("label");
+        answerLabel.textContent = "Student Answer";
+
+        const answerInput = document.createElement("textarea");
+        answerInput.name = "studentAnswer[]";
+        answerInput.rows = 3;
+        answerInput.placeholder = "Enter the student's answer";
         answerInput.value = answer;
 
-        row.querySelector(".remove-response").addEventListener("click", () => {
-            const rows = $$(".response-row", responseRows);
+        const removeButton = document.createElement("button");
+        removeButton.type = "button";
+        removeButton.className = "remove-response";
+        removeButton.textContent = "Remove";
 
-            if (rows.length <= 1) {
+        removeButton.addEventListener("click", () => {
+            const allRows = $$(".response-row", rowsContainer);
+
+            if (allRows.length <= 1) {
                 idInput.value = "";
                 answerInput.value = "";
-                showMessage(
-                    message,
-                    "Keep at least one response row. You can clear its fields instead.",
-                    "info"
-                );
+                setMessage(message, "The last response row has been cleared.", "info");
                 return;
             }
 
             row.remove();
         });
 
-        responseRows.appendChild(row);
+        idLabel.appendChild(idInput);
+        answerLabel.appendChild(answerInput);
+        row.append(idLabel, answerLabel, removeButton);
+        rowsContainer.appendChild(row);
     }
 
-    if (addButton && responseRows && !addButton.dataset.initialized) {
-        addButton.dataset.initialized = "true";
-
-        addButton.addEventListener("click", () => {
-            if ($$(".response-row", responseRows).length >= 100) {
-                showMessage(
-                    message,
-                    "You can analyze a maximum of 100 student responses at a time.",
-                    "error"
-                );
-                return;
-            }
-
-            addStudentRow();
-        });
-    }
-
-    // Support the response row already present in assessment.html.
+    /*
+     * If the HTML already contains a response row, leave it intact.
+     * Otherwise, create the first row.
+     */
     if (
-        responseRows &&
-        $$(".response-row", responseRows).length === 0 &&
-        $$('[name="studentAnswer[]"]', responseRows).length > 0
+        rowsContainer &&
+        !$$('[name="studentAnswer[]"]', rowsContainer).length
     ) {
-        $$('[name="studentAnswer[]"]', responseRows).forEach(field => {
-            field.closest(".response-row")?.classList.add("response-row");
-        });
+        addStudentRow();
     }
 
-    if (sampleButton && !sampleButton.dataset.initialized) {
-        sampleButton.dataset.initialized = "true";
+    if (addButton) {
+        addButton.addEventListener("click", () => addStudentRow());
+    }
 
+    if (sampleButton) {
         sampleButton.addEventListener("click", () => {
-            if (!responseRows) return;
+            if (!rowsContainer) return;
 
-            responseRows.innerHTML = "";
+            rowsContainer.replaceChildren();
 
             addStudentRow("Student 1", "2 + 3 × 4 = 20");
             addStudentRow("Student 2", "2 + 12 = 14");
             addStudentRow("Student 3", "I am not sure how to start.");
 
             const topic = $('[name="topic"]', form);
+            const grade = $('[name="grade"]', form);
             const question = $('[name="question"]', form);
             const correctAnswer = $('[name="correctAnswer"]', form);
-            const grade = $('[name="grade"]', form);
 
             if (topic) topic.value = "Order of Operations";
+            if (grade) grade.value = "Grade 7";
             if (question) question.value = "Calculate 2 + 3 × 4";
             if (correctAnswer) correctAnswer.value = "14";
-            if (grade && !grade.value) grade.value = "Grade 7";
 
-            showMessage(
+            setMessage(
                 message,
-                "Sample responses loaded. Click Analyze Responses to continue.",
+                "Sample responses are ready. Click Analyze Responses.",
                 "success"
             );
         });
     }
 
-    if (form.dataset.initialized) return;
-    form.dataset.initialized = "true";
-
     form.addEventListener("submit", async event => {
         event.preventDefault();
 
-        if (preview) preview.innerHTML = "";
+        if (output) output.replaceChildren();
 
         const topic = $('[name="topic"]', form)?.value.trim() || "";
         const grade = $('[name="grade"]', form)?.value.trim() || "";
@@ -280,26 +318,25 @@ function initializeAssessment() {
         const teacherContext =
             $('[name="teacherContext"]', form)?.value.trim() || "";
 
-        const idFields = $$('[name="studentId[]"]', form);
-        const answerFields = $$('[name="studentAnswer[]"]', form);
+        const ids = $$('[name="studentId[]"]', form);
+        const answers = $$('[name="studentAnswer[]"]', form);
 
-        const responses = answerFields.map((field, index) => ({
-            studentId:
-                idFields[index]?.value.trim() || `Student ${index + 1}`,
+        const responses = answers.map((field, index) => ({
+            studentId: ids[index]?.value.trim() || `Student ${index + 1}`,
             answer: field.value.trim()
-        })).filter(student => student.answer !== "");
+        })).filter(item => item.answer.length > 0);
 
         if (!topic || !question || !correctAnswer) {
-            showMessage(
+            setMessage(
                 message,
-                "Please enter the topic, question, and correct answer.",
+                "Please complete the topic, question, and correct answer.",
                 "error"
             );
             return;
         }
 
         if (responses.length < 1 || responses.length > 100) {
-            showMessage(
+            setMessage(
                 message,
                 "Enter between 1 and 100 non-empty student responses.",
                 "error"
@@ -307,129 +344,65 @@ function initializeAssessment() {
             return;
         }
 
-        /*
-         * Send the combined response objects AND parallel arrays.
-         * The Flask endpoint must still accept at least one of
-         * these formats. If it uses another schema, app.py must
-         * be updated to match.
-         */
+        const studentIds = responses.map(item => item.studentId);
+        const studentAnswers = responses.map(item => item.answer);
+
         const payload = {
             topic,
             grade,
             question,
             correctAnswer,
+            correct_answer: correctAnswer,
             teacherContext,
+            teacher_context: teacherContext,
 
-            // Combined format:
-            responses: responses.map(student => ({
-                studentId: student.studentId,
-                answer: student.answer
+            responses: responses.map(item => ({
+                studentId: item.studentId,
+                answer: item.answer
             })),
 
-            // Parallel-array format:
-            studentIds: responses.map(student => student.studentId),
-            studentAnswers: responses.map(student => student.answer),
-
-            // Alternative snake_case format:
-            student_ids: responses.map(student => student.studentId),
-            student_answers: responses.map(student => student.answer),
-
-            // Alternative field names:
-            correct_answer: correctAnswer,
-            teacher_context: teacherContext
+            studentIds,
+            studentAnswers,
+            student_ids: studentIds,
+            student_answers: studentAnswers
         };
 
-        setButtonLoading(submitButton, true, "Analyzing...");
-        showMessage(message, "Analyzing student responses...", "info");
+        setLoading(submitButton, true, "Analyzing Responses...");
+        setMessage(message, "TeachSense AI is analyzing the responses...", "info");
 
         try {
-            const result = await apiRequest(API.analyze, {
+            const data = await apiRequest(API.analyze, {
                 method: "POST",
                 body: JSON.stringify(payload)
             });
 
-            renderAssessmentResult(result, preview);
+            const report = getValue(
+                data,
+                ["result", "analysis", "assessment", "report"],
+                data
+            );
 
-            showMessage(
+            renderResult(output, report);
+
+            setMessage(
                 message,
-                result.message || "Assessment analysis completed.",
+                data.message || "Assessment analysis completed successfully.",
                 "success"
             );
         } catch (error) {
-            showMessage(
+            setMessage(
                 message,
-                `Could not analyze responses: ${error.message}. Check that the Flask backend is running and that app.py accepts the submitted response format.`,
+                `Analysis failed: ${error.message}. If the error mentions student responses, app.py must accept the response format sent by this page.`,
                 "error"
             );
         } finally {
-            setButtonLoading(submitButton, false);
+            setLoading(submitButton, false);
         }
     });
 }
 
-function renderAssessmentResult(result, container) {
-    if (!container) return;
-
-    const report = getFirstValue(
-        result,
-        ["result", "analysis", "assessment", "report"],
-        result
-    );
-
-    container.innerHTML = "";
-
-    const heading = document.createElement("h2");
-    heading.textContent = "Assessment Results";
-    container.appendChild(heading);
-
-    if (typeof report === "string") {
-        const paragraph = document.createElement("p");
-        paragraph.textContent = report;
-        container.appendChild(paragraph);
-    } else if (report && typeof report === "object") {
-        renderObject(container, report);
-    } else {
-        const paragraph = document.createElement("p");
-        paragraph.textContent = formatValue(report);
-        container.appendChild(paragraph);
-    }
-
-    const findings = getFirstValue(
-        result,
-        ["findings", "keyFindings", "key_findings"],
-        null
-    );
-
-    const recommendations = getFirstValue(
-        result,
-        ["recommendations", "nextSteps", "next_steps"],
-        null
-    );
-
-    if (findings) {
-        const section = document.createElement("section");
-        section.innerHTML = "<h3>Key Findings</h3>";
-        renderObject(section, findings);
-        container.appendChild(section);
-    }
-
-    if (recommendations) {
-        const section = document.createElement("section");
-        section.innerHTML = "<h3>Recommendations</h3>";
-        renderObject(section, recommendations);
-        container.appendChild(section);
-    }
-
-    if (result.id || result.assessmentId || result.assessment_id) {
-        const id = result.id || result.assessmentId || result.assessment_id;
-        const note = document.createElement("p");
-        note.textContent = `Assessment ID: ${id}`;
-        container.appendChild(note);
-    }
-}
-
 /* =========================================================
-   DASHBOARD / ASSESSMENT HISTORY
+   2. DASHBOARD / ASSESSMENT HISTORY
    ========================================================= */
 
 async function initializeDashboard() {
@@ -442,52 +415,51 @@ async function initializeDashboard() {
 
     try {
         const data = await apiRequest(API.assessments);
-        const assessments = getFirstValue(
+        const assessments = getValue(
             data,
             ["assessments", "results", "data"],
             []
         );
 
-        container.innerHTML = "";
+        container.replaceChildren();
 
         if (!Array.isArray(assessments) || assessments.length === 0) {
-            container.innerHTML = "<p>No assessments yet. Create your first assessment.</p>";
+            container.textContent = "No assessments yet. Create your first one!";
             return;
         }
 
         assessments.forEach(item => {
             const card = document.createElement("article");
-            card.className = "assessment-card";
+            card.className = "ts-result-card";
 
             const title = document.createElement("h3");
             title.textContent = item.topic || item.title || "Assessment";
 
-            const detail = document.createElement("p");
-            detail.textContent =
-                `Grade: ${item.grade || "Not specified"} · ` +
+            const details = document.createElement("p");
+            details.textContent =
+                `Grade: ${item.grade || "Not specified"} | ` +
                 `Date: ${item.created_at || item.createdAt || "Not available"}`;
 
-            card.append(title, detail);
+            card.append(title, details);
 
-            const id = item.id || item.assessment_id;
+            const id = item.id ?? item.assessment_id;
 
             if (id !== undefined && id !== null) {
                 const link = document.createElement("a");
                 link.href = `insights.html?id=${encodeURIComponent(id)}`;
-                link.textContent = "View Insights";
+                link.textContent = "View Insights →";
                 card.appendChild(link);
             }
 
             container.appendChild(card);
         });
     } catch (error) {
-        container.innerHTML =
-            `<p>Could not load assessments: ${escapeHTML(error.message)}</p>`;
+        container.textContent = `Unable to load assessments: ${error.message}`;
     }
 }
 
 /* =========================================================
-   INSIGHTS PAGE
+   3. INSIGHTS PAGE
    ========================================================= */
 
 async function initializeInsights() {
@@ -498,12 +470,11 @@ async function initializeInsights() {
 
     if (!container) return;
 
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get("id");
+    const id = new URLSearchParams(location.search).get("id");
 
     if (!id) {
-        container.innerHTML =
-            "<p>Select an assessment from the dashboard to view its insights.</p>";
+        container.textContent =
+            "Select an assessment from the dashboard to view insights.";
         return;
     }
 
@@ -512,19 +483,17 @@ async function initializeInsights() {
             `${API.assessments}/${encodeURIComponent(id)}`
         );
 
-        renderObject(container, getFirstValue(
-            data,
-            ["assessment", "insights", "result", "data"],
-            data
-        ));
+        renderResult(
+            container,
+            getValue(data, ["assessment", "insights", "result", "data"], data)
+        );
     } catch (error) {
-        container.innerHTML =
-            `<p>Could not load insights: ${escapeHTML(error.message)}</p>`;
+        container.textContent = `Unable to load insights: ${error.message}`;
     }
 }
 
 /* =========================================================
-   LESSON PLAN GENERATOR
+   4. LESSON PLAN PAGE
    ========================================================= */
 
 function initializeLessonPlan() {
@@ -532,8 +501,8 @@ function initializeLessonPlan() {
         $("#lessonPlanForm") ||
         $("#generateLessonPlanForm");
 
-    if (!form || form.dataset.initialized) return;
-    form.dataset.initialized = "true";
+    if (!form || form.dataset.premiumReady) return;
+    form.dataset.premiumReady = "true";
 
     const output =
         $("#lessonPlanOutput") ||
@@ -551,7 +520,6 @@ function initializeLessonPlan() {
 
         const fields = Object.fromEntries(
             $$("input[name], select[name], textarea[name]", form)
-                .filter(field => field.name)
                 .map(field => [field.name, field.value.trim()])
         );
 
@@ -564,49 +532,40 @@ function initializeLessonPlan() {
             teacherContext: fields.teacherContext || fields.context || ""
         };
 
-        setButtonLoading(submitButton, true, "Generating...");
-        showMessage(message, "Generating lesson plan...", "info");
+        setLoading(submitButton, true, "Creating Lesson Plan...");
+        setMessage(message, "Generating your lesson plan...", "info");
 
         try {
-            const result = await apiRequest(API.lessonPlan, {
+            const data = await apiRequest(API.lessonPlan, {
                 method: "POST",
                 body: JSON.stringify(payload)
             });
 
-            renderObject(output, getFirstValue(
-                result,
-                ["lessonPlan", "lesson_plan", "plan", "result", "data"],
-                result
-            ));
+            renderResult(
+                output,
+                getValue(data, ["lessonPlan", "lesson_plan", "plan", "result"], data)
+            );
 
-            showMessage(
+            setMessage(
                 message,
-                result.message || "Lesson plan generated successfully.",
+                data.message || "Lesson plan generated successfully.",
                 "success"
             );
         } catch (error) {
-            showMessage(
-                message,
-                `Could not generate lesson plan: ${error.message}`,
-                "error"
-            );
+            setMessage(message, `Lesson plan failed: ${error.message}`, "error");
         } finally {
-            setButtonLoading(submitButton, false);
+            setLoading(submitButton, false);
         }
     });
 }
 
 /* =========================================================
-   CHAT PAGE
+   5. AI CHAT PAGE
    ========================================================= */
 
 function initializeChat() {
-    const form =
-        $("#chatForm") ||
-        $("#chatbotForm");
-
-    if (!form || form.dataset.initialized) return;
-    form.dataset.initialized = "true";
+    const form = $("#chatForm") || $("#chatbotForm");
+    if (!form || form.dataset.premiumReady) return;
 
     const input =
         $("#chatInput") ||
@@ -618,17 +577,19 @@ function initializeChat() {
         $("#chatHistory") ||
         $("#chatOutput");
 
-    const submitButton = $('button[type="submit"]', form);
-
     if (!input || !messages) return;
 
-    function addChatMessage(role, text) {
-        const message = document.createElement("div");
-        message.className = `chat-message ${role}`;
-        message.textContent = text;
-        messages.appendChild(message);
+    form.dataset.premiumReady = "true";
+
+    const submitButton = $('button[type="submit"]', form);
+
+    function addMessage(role, text) {
+        const bubble = document.createElement("div");
+        bubble.className = `ts-chat-bubble ts-chat-${role}`;
+        bubble.textContent = text;
+        messages.appendChild(bubble);
         messages.scrollTop = messages.scrollHeight;
-        return message;
+        return bubble;
     }
 
     form.addEventListener("submit", async event => {
@@ -637,15 +598,14 @@ function initializeChat() {
         const text = input.value.trim();
         if (!text) return;
 
-        addChatMessage("user", text);
+        addMessage("user", text);
         input.value = "";
 
-        setButtonLoading(submitButton, true, "Sending...");
-
-        const waiting = addChatMessage("assistant", "Thinking...");
+        setLoading(submitButton, true, "Thinking...");
+        const waiting = addMessage("assistant", "TeachSense AI is thinking...");
 
         try {
-            const result = await apiRequest(API.chat, {
+            const data = await apiRequest(API.chat, {
                 method: "POST",
                 body: JSON.stringify({
                     message: text,
@@ -653,112 +613,43 @@ function initializeChat() {
                 })
             });
 
-            waiting.textContent = String(getFirstValue(
-                result,
+            waiting.textContent = String(getValue(
+                data,
                 ["reply", "response", "answer", "message", "result"],
-                "I could not find a response."
+                "No response received."
             ));
         } catch (error) {
-            waiting.textContent = `Sorry, an error occurred: ${error.message}`;
+            waiting.textContent = `Sorry, something went wrong: ${error.message}`;
         } finally {
-            setButtonLoading(submitButton, false);
+            setLoading(submitButton, false);
         }
     });
 }
 
 /* =========================================================
-   LOGIN / SIGNUP FORM UX
-   These handlers submit normally unless the page has an
-   explicit data-api attribute configured on its form.
-   ========================================================= */
-
-function initializeAuthForms() {
-    const forms = [
-        { selector: "#loginForm", endpoint: "/api/login" },
-        { selector: "#signupForm", endpoint: "/api/signup" }
-    ];
-
-    forms.forEach(({ selector, endpoint }) => {
-        const form = $(selector);
-        if (!form || form.dataset.initialized) return;
-
-        /*
-         * Do not intercept a regular HTML form unless its
-         * data-api attribute explicitly enables API submission.
-         */
-        if (form.dataset.api !== "true") return;
-
-        form.dataset.initialized = "true";
-
-        const message =
-            $("#authMessage", form) ||
-            $("#loginMessage") ||
-            $("#signupMessage");
-
-        const button = $('button[type="submit"]', form);
-
-        form.addEventListener("submit", async event => {
-            event.preventDefault();
-
-            const payload = Object.fromEntries(
-                $$("input[name]", form).map(input => [
-                    input.name,
-                    input.value
-                ])
-            );
-
-            setButtonLoading(button, true, "Please wait...");
-            showMessage(message, "Processing...", "info");
-
-            try {
-                const result = await apiRequest(endpoint, {
-                    method: "POST",
-                    body: JSON.stringify(payload)
-                });
-
-                showMessage(
-                    message,
-                    result.message || "Successful.",
-                    "success"
-                );
-
-                if (result.redirect) {
-                    window.location.href = result.redirect;
-                } else if (selector === "#loginForm") {
-                    window.location.href = "index.html";
-                }
-            } catch (error) {
-                showMessage(message, error.message, "error");
-            } finally {
-                setButtonLoading(button, false);
-            }
-        });
-    });
-}
-
-/* =========================================================
-   BACKEND STATUS INDICATOR
-   Optional element: #apiStatus
+   6. OPTIONAL BACKEND STATUS
+   Add an element with id="apiStatus" to display this.
    ========================================================= */
 
 async function checkBackendStatus() {
-    const indicator = $("#apiStatus");
-    if (!indicator) return;
+    const status = $("#apiStatus");
+    if (!status) return;
 
     try {
-        const result = await apiRequest(API.health);
-        indicator.textContent = result.message || "Backend connected";
-        indicator.classList.add("connected");
-        indicator.classList.remove("disconnected");
-    } catch (error) {
-        indicator.textContent = "Backend unavailable";
-        indicator.classList.add("disconnected");
-        indicator.classList.remove("connected");
+        const data = await apiRequest(API.health);
+
+        status.textContent = data.message || "Backend connected";
+        status.classList.add("connected");
+        status.classList.remove("disconnected");
+    } catch {
+        status.textContent = "Backend unavailable";
+        status.classList.add("disconnected");
+        status.classList.remove("connected");
     }
 }
 
 /* =========================================================
-   GLOBAL INITIALIZATION
+   START APPLICATION
    ========================================================= */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -767,6 +658,5 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeInsights();
     initializeLessonPlan();
     initializeChat();
-    initializeAuthForms();
     checkBackendStatus();
 });
