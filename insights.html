@@ -40,7 +40,7 @@
         <div class="eyebrow">DATA-INSPIRED TEACHING</div>
         <h1>Learning Insights</h1>
         <p class="subtitle">
-          Review saved assessment reports and explore patterns in student answers.
+          Explore assessment results and identify areas that may need more teaching.
         </p>
       </div>
       <div class="avatar">T</div>
@@ -51,8 +51,8 @@
         <div class="eyebrow">✦ LEARN FROM EVERY RESPONSE</div>
         <h1>Turn patterns into <span>progress.</span></h1>
         <p class="subtitle">
-          Review possible misconceptions and use evidence to plan
-          targeted teaching activities.
+          Review student response patterns, possible misconceptions,
+          and suggested teaching activities.
         </p>
         <a class="btn" href="assessment.html">＋ Create assessment</a>
       </div>
@@ -73,20 +73,20 @@
       <div class="form-group">
         <label for="reportSelect">Saved assessment report</label>
         <select id="reportSelect">
-          <option value="">Choose a saved report</option>
+          <option value="">Loading saved reports...</option>
         </select>
       </div>
 
       <p class="muted">
-        Reports appear here after an assessment has been analyzed and saved.
+        Reports appear here after an assessment has been analyzed successfully.
       </p>
 
-      <div id="insightReport">
+      <div id="insightReport" aria-live="polite">
         <div class="empty-state">
           <div class="empty-icon">📊</div>
           <strong>No report selected</strong>
           <p>
-            Select a saved report to review its results and teaching recommendations.
+            Analyze an assessment first, then select its report here.
           </p>
           <a href="assessment.html" class="btn btn-secondary">
             Go to assessment analysis →
@@ -99,23 +99,23 @@
 
       <article class="panel">
         <div class="stat-icon">◎</div>
-        <h3>What are possible misconceptions?</h3>
+        <h3>Possible misconceptions</h3>
         <p class="muted">
-          A misconception is an incorrect or incomplete understanding of a concept.
-          Similar incorrect answers can indicate an area worth reviewing.
+          Similar incorrect answers may reveal a concept that students
+          need to practise or understand more clearly.
         </p>
         <div class="notice">
-          AI suggestions are hypotheses, not definitive judgments about a student.
-          Confirm them through discussion or another assessment.
+          Treat each result as a suggestion, not a definitive judgment.
+          Confirm it with discussion or a follow-up question.
         </div>
       </article>
 
       <article class="panel">
         <div class="stat-icon">✧</div>
-        <h3>What should a teacher do next?</h3>
+        <h3>Recommended next steps</h3>
         <p class="muted">
-          Use the results to choose a suitable explanation, worked example,
-          classroom activity, or follow-up question.
+          Use the assessment evidence to plan an explanation,
+          worked example, classroom activity, or follow-up exercise.
         </p>
         <a class="btn btn-secondary" href="lesson-plan.html">
           Create a lesson plan →
