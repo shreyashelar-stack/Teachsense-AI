@@ -27,6 +27,280 @@
       </nav>
 
       <div class="sidebar-note">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="description"
+    content="TeachSense AI helps teachers explore student learning gaps and plan targeted teaching activities."
+  >
+
+  <title>TeachSense AI | Dashboard</title>
+
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+
+<body>
+  <div class="app-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <a class="brand" href="index.html" aria-label="TeachSense AI dashboard">
+        <span class="brand-icon">✦</span>
+        <span>
+          TeachSense
+          <small>AI LEARNING PLATFORM</small>
+        </span>
+      </a>
+
+      <div class="nav-label">Workspace</div>
+
+      <nav aria-label="Main navigation">
+        <a class="nav-link active" href="index.html" aria-current="page">
+          ⌂ Dashboard
+        </a>
+
+        <a class="nav-link" href="assessment.html">
+          ▤ Assessment Analysis
+        </a>
+
+        <a class="nav-link" href="insights.html">
+          ◈ Learning Insights
+        </a>
+
+        <a class="nav-link" href="lesson-plan.html">
+          ✧ Lesson Planner
+        </a>
+
+        <a class="nav-link" href="chat.html">
+          ◉ AI Teaching Assistant
+        </a>
+      </nav>
+
+      <div class="sidebar-note">
+        <div class="eyebrow">TEACH SMARTER</div>
+        <strong>Every learner matters.</strong>
+        <p>
+          Turn student responses into useful teaching insights.
+        </p>
+      </div>
+    </aside>
+
+    <!-- MAIN DASHBOARD -->
+    <main class="main-content">
+
+      <!-- HEADER -->
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">YOUR TEACHING WORKSPACE</div>
+          <h1>Dashboard</h1>
+          <p class="subtitle">
+            Understand your students. Improve every lesson.
+          </p>
+        </div>
+
+        <div class="avatar" title="Teacher profile" aria-label="Teacher">
+          T
+        </div>
+      </header>
+
+      <!-- HERO SECTION -->
+      <section class="hero">
+        <div>
+          <div class="eyebrow">✦ AI-POWERED EDUCATION</div>
+
+          <h1>
+            Understand every
+            <span>learner.</span>
+          </h1>
+
+          <p class="subtitle">
+            Explore student answer patterns, discover possible
+            learning gaps, and create more effective teaching strategies.
+          </p>
+
+          <a class="btn" href="assessment.html">
+            ✧ Analyze an assessment →
+          </a>
+        </div>
+
+        <div class="hero-art" aria-hidden="true">
+          <div class="brain-orbit">
+            <div class="brain-symbol">🧠</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DASHBOARD STATISTICS -->
+      <section class="stats-grid" aria-label="Dashboard statistics">
+
+        <article class="stat-card">
+          <div class="stat-icon">▤</div>
+          <div class="stat-label">Assessments analyzed</div>
+
+          <div
+            class="stat-value"
+            id="dashAssessments"
+            data-count="0"
+            aria-live="polite"
+          >0</div>
+
+          <div class="muted">Saved assessment reports</div>
+        </article>
+
+        <article class="stat-card">
+          <div class="stat-icon">♧</div>
+          <div class="stat-label">Student responses</div>
+
+          <div
+            class="stat-value"
+            id="dashResponses"
+            data-count="0"
+            aria-live="polite"
+          >0</div>
+
+          <div class="muted">Responses across saved reports</div>
+        </article>
+
+        <article class="stat-card">
+          <div class="stat-icon">◎</div>
+          <div class="stat-label">Average accuracy</div>
+
+          <div
+            class="stat-value"
+            id="dashAccuracy"
+            aria-live="polite"
+          >—</div>
+
+          <div class="muted">Across saved assessments</div>
+        </article>
+
+        <article class="stat-card">
+          <div class="stat-icon">✦</div>
+          <div class="stat-label">Learning insights</div>
+
+          <div
+            class="stat-value"
+            id="dashInsights"
+            data-count="0"
+            aria-live="polite"
+          >0</div>
+
+          <div class="muted">Possible misconception patterns</div>
+        </article>
+
+      </section>
+
+      <!-- RECENT ASSESSMENTS -->
+      <div class="section-heading">
+        <h2>Recent assessments</h2>
+
+        <a class="btn btn-secondary" href="assessment.html">
+          + New assessment
+        </a>
+      </div>
+
+      <section class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Assessment</th>
+                <th scope="col">Students</th>
+                <th scope="col">Accuracy</th>
+                <th scope="col">Date</th>
+              </tr>
+            </thead>
+
+            <tbody id="recentAssessments">
+              <tr>
+                <td colspan="4">
+                  <div class="empty-state">
+                    <div class="empty-icon">📚</div>
+
+                    <strong>No assessments yet</strong>
+
+                    <p>
+                      Analyze your first set of student responses
+                      to see a report here.
+                    </p>
+
+                    <a class="btn" href="assessment.html">
+                      Create assessment
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- WORKSPACE SHORTCUTS -->
+      <div class="section-heading">
+        <h2>Explore your workspace</h2>
+      </div>
+
+      <section class="grid-3">
+
+        <article class="panel">
+          <div class="stat-icon">▤</div>
+
+          <h3>Assessment Analysis</h3>
+
+          <p class="muted">
+            Examine student answers and explore possible misconceptions.
+          </p>
+
+          <a class="btn btn-secondary" href="assessment.html">
+            Open analysis →
+          </a>
+        </article>
+
+        <article class="panel">
+          <div class="stat-icon">✧</div>
+
+          <h3>Lesson Planner</h3>
+
+          <p class="muted">
+            Prepare lesson plans with learning goals and targeted activities.
+          </p>
+
+          <a class="btn btn-secondary" href="lesson-plan.html">
+            Plan a lesson →
+          </a>
+        </article>
+
+        <article class="panel">
+          <div class="stat-icon">◉</div>
+
+          <h3>Teaching Assistant</h3>
+
+          <p class="muted">
+            Explore teaching strategies and classroom activities.
+          </p>
+
+          <a class="btn btn-secondary" href="chat.html">
+            Start chatting →
+          </a>
+        </article>
+
+      </section>
+
+      <!-- FOOTER -->
+      <footer class="footer">
+        TeachSense AI · Supporting teachers with responsible AI
+      </footer>
+
+    </main>
+  </div>
+</body>
+</html>
+
         <div class="eyebrow">TEACH SMARTER</div>
         <strong>Every learner matters.</strong>
         <p>Turn student responses into actionable teaching insights.</p>
